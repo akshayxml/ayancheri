@@ -197,7 +197,7 @@ export default class FamilyTree extends React.Component<{}, State> {
           </div>
         )}
         <div className="f3" id="FamilyChart" ref={this.cont} style={{ width: "100%", height: "900px", margin: "auto", backgroundColor: "rgb(33,33,33)", color: "#fff" }}></div>
-        <div style={{ padding: "20px", zIndex: 10 }}>
+        <div style={{ position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)", zIndex: 1000 }}>
           <button 
             className={`toggle-mode-btn ${editMode ? 'edit-active' : ''}`}
             onClick={this.toggleEditMode}
