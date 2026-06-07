@@ -1,11 +1,9 @@
-import crypto from 'crypto';
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, datum, updatedData, captchaToken, captchaAnswer } = req.body;
+  const { action, datum, updatedData, captchaToken } = req.body;
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const toEmail = process.env.TO_EMAIL;
@@ -22,34 +20,28 @@ export default async function handler(req: any, res: any) {
   if (!datum || typeof datum !== 'object') {
     return res.status(400).json({ error: 'Invalid or missing datum' });
   }
-  if (typeof captchaToken !== 'string' || typeof captchaAnswer !== 'string') {
-    return res.status(400).json({ error: 'Invalid or missing CAPTCHA parameters' });
+  if (typeof captchaToken !== 'string') {
+    return res.status(400).json({ error: 'Missing CAPTCHA token' });
   }
 
-  const [timestampStr, hash] = captchaToken.split(':');
-  const timestamp = parseInt(timestampStr, 10);
-
-  if (isNaN(timestamp) || !hash) {
-    return res.status(400).json({ error: 'Invalid CAPTCHA token' });
-  }
-
-  // Expiration check (10 minutes) & Future timestamp check
-  const diff = Date.now() - timestamp;
-  if (diff > 10 * 60 * 1000 || diff < -30 * 1000) {
-    return res.status(400).json({ error: 'CAPTCHA expired. Please refresh.' });
-  }
-
-  // Re-calculate the payload request hash
-  const payloadString = JSON.stringify({ action, datum, updatedData });
-  const requestHash = crypto.createHash('sha256').update(payloadString).digest('hex');
-
-  const expectedHash = crypto
-    .createHmac('sha256', resendApiKey)
-    .update(`${captchaAnswer.trim()}:${timestamp}:${requestHash}`)
-    .digest('hex');
-
-  if (expectedHash !== hash) {
-    return res.status(400).json({ error: 'Incorrect CAPTCHA answer' });
+  // Verify Google reCAPTCHA
+  const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnFTxWfn0tBt8yU8Vxdz';
+  try {
+    const verifyResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `secret=${recaptchaSecret}&response=${captchaToken}`
+    });
+    
+    const verificationResult = await verifyResponse.json();
+    if (!verificationResult.success) {
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+    }
+  } catch (error: any) {
+    console.error('reCAPTCHA verification exception:', error);
+    return res.status(500).json({ error: 'Internal server error during verification' });
   }
 
 
