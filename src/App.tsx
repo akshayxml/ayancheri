@@ -4,6 +4,13 @@ import 'family-chart/styles/family-chart.css';
 import "./App.css";
 import { familyData } from "./data";
 
+async function sha256(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 interface State {
   editMode: boolean;
   toast: {
@@ -47,7 +54,9 @@ export default class FamilyTree extends React.Component<{}, State> {
   triggerSubmitFlow = async (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
     this.showToast('Generating security CAPTCHA...', 'loading');
     try {
-      const response = await fetch('/api/get-captcha');
+      const payloadString = JSON.stringify({ action, datum, updatedData });
+      const requestHash = await sha256(payloadString);
+      const response = await fetch(`/api/get-captcha?hash=${requestHash}`);
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate CAPTCHA');

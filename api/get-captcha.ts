@@ -11,6 +11,11 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
+  const { hash: requestHash } = req.query;
+  if (!requestHash || typeof requestHash !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid request hash' });
+  }
+
   // Generate a random math question (e.g. 5 + 9)
   const num1 = Math.floor(Math.random() * 15) + 1;
   const num2 = Math.floor(Math.random() * 15) + 1;
@@ -20,7 +25,7 @@ export default async function handler(req: any, res: any) {
   // Create HMAC hash using the Resend API Key as the secret key
   const hash = crypto
     .createHmac('sha256', resendApiKey)
-    .update(`${sum}:${timestamp}`)
+    .update(`${sum}:${timestamp}:${requestHash}`)
     .digest('hex');
 
   const token = `${timestamp}:${hash}`;
