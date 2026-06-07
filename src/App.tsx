@@ -6,13 +6,55 @@ import { familyData } from "./data";
 
 interface State {
   editMode: boolean;
+  toast: {
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'loading';
+  } | null;
 }
 
 export default class FamilyTree extends React.Component<{}, State> {
   cont = React.createRef<HTMLDivElement>();
+  toastTimeout: any = null;
 
   state: State = {
-    editMode: false
+    editMode: false,
+    toast: null
+  };
+
+  showToast = (message: string, type: 'success' | 'error' | 'loading' = 'success', duration = 5000) => {
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.setState({ toast: { show: true, message, type } });
+    if (type !== 'loading') {
+      this.toastTimeout = setTimeout(() => {
+        this.setState({ toast: null });
+        this.toastTimeout = null;
+      }, duration);
+    }
+  };
+
+  submitRequest = async (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
+    this.showToast('Submitting request for approval...', 'loading');
+    try {
+      const response = await fetch('/api/submit-edit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, datum, updatedData })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        this.showToast('Edit submitted! The owner has been notified.', 'success');
+      } else {
+        throw new Error(data.error || 'Failed to submit request');
+      }
+    } catch (error: any) {
+      console.error(error);
+      this.showToast(error.message || 'Submission failed. Please try again.', 'error');
+    }
   };
 
   componentDidMount() {
@@ -58,6 +100,29 @@ export default class FamilyTree extends React.Component<{}, State> {
         .setEditFirst(true)
         .setCardClickOpen(f3Card);
 
+      f3EditTree.setOnSubmit((e: any, datum: any, applyChanges: any, postSubmit: any) => {
+        e.preventDefault();
+        
+        // Apply local changes so the user sees it in the browser
+        applyChanges();
+        const updatedData = f3EditTree.exportData();
+        postSubmit();
+
+        const isExisting = familyData.some(d => d.id === datum.id);
+        const action = isExisting ? 'edit' : 'add';
+        
+        this.submitRequest(action, datum, updatedData);
+      });
+
+      f3EditTree.setOnDelete((datum: any, deletePerson: any, postSubmit: any) => {
+        // Apply delete locally
+        deletePerson();
+        const updatedData = f3EditTree.exportData();
+        postSubmit();
+
+        this.submitRequest('delete', datum, updatedData);
+      });
+
       f3EditTree.setEdit();
 
       f3Chart.updateTree({ initial: true });
@@ -86,7 +151,7 @@ export default class FamilyTree extends React.Component<{}, State> {
   };
 
   render() {
-    const { editMode } = this.state;
+    const { editMode, toast } = this.state;
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", backgroundColor: "rgb(33,33,33)", position: "relative" }}>
         <style>{`
@@ -140,6 +205,23 @@ export default class FamilyTree extends React.Component<{}, State> {
             {editMode ? "Switch to View Mode" : "Switch to Edit Mode"}
           </button>
         </div>
+
+        {toast && (
+          <div className={`notification-toast show ${toast.type}`}>
+            {toast.type === 'loading' && <div className="spinner" />}
+            {toast.type === 'success' && (
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {toast.type === 'error' && (
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+            <span>{toast.message}</span>
+          </div>
+        )}
       </div>
     );
   }
