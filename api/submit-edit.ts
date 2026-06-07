@@ -1,9 +1,11 @@
+import crypto from 'crypto';
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, datum, updatedData } = req.body;
+  const { action, datum, updatedData, captchaToken, captchaAnswer } = req.body;
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const toEmail = process.env.TO_EMAIL;
@@ -12,6 +14,33 @@ export default async function handler(req: any, res: any) {
     console.error('Missing RESEND_API_KEY or TO_EMAIL environment variables.');
     return res.status(500).json({ error: 'Server configuration error' });
   }
+
+  // Verify CAPTCHA
+  if (!captchaToken || !captchaAnswer) {
+    return res.status(400).json({ error: 'CAPTCHA is required' });
+  }
+
+  const [timestampStr, hash] = captchaToken.split(':');
+  const timestamp = parseInt(timestampStr, 10);
+
+  if (isNaN(timestamp) || !hash) {
+    return res.status(400).json({ error: 'Invalid CAPTCHA token' });
+  }
+
+  // Expiration check (10 minutes)
+  if (Date.now() - timestamp > 10 * 60 * 1000) {
+    return res.status(400).json({ error: 'CAPTCHA expired. Please refresh.' });
+  }
+
+  const expectedHash = crypto
+    .createHmac('sha256', resendApiKey)
+    .update(`${captchaAnswer.trim()}:${timestamp}`)
+    .digest('hex');
+
+  if (expectedHash !== hash) {
+    return res.status(400).json({ error: 'Incorrect CAPTCHA answer' });
+  }
+
 
   const actionText = action.toUpperCase();
   const rawPersonName = datum?.data ? `${datum.data['first name'] || ''} ${datum.data['last name'] || ''}`.trim() : 'Unknown';

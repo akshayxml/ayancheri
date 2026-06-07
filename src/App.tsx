@@ -11,6 +11,14 @@ interface State {
     message: string;
     type: 'success' | 'error' | 'loading';
   } | null;
+  captcha: {
+    question: string;
+    token: string;
+    answer: string;
+    action: 'edit' | 'add' | 'delete';
+    datum: any;
+    updatedData: any;
+  } | null;
 }
 
 export default class FamilyTree extends React.Component<{}, State> {
@@ -19,7 +27,8 @@ export default class FamilyTree extends React.Component<{}, State> {
 
   state: State = {
     editMode: false,
-    toast: null
+    toast: null,
+    captcha: null
   };
 
   showToast = (message: string, type: 'success' | 'error' | 'loading' = 'success', duration = 5000) => {
@@ -35,7 +44,55 @@ export default class FamilyTree extends React.Component<{}, State> {
     }
   };
 
-  submitRequest = async (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
+  triggerSubmitFlow = async (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
+    this.showToast('Generating security CAPTCHA...', 'loading');
+    try {
+      const response = await fetch('/api/get-captcha');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate CAPTCHA');
+      }
+      this.setState({
+        toast: null,
+        captcha: {
+          question: data.question,
+          token: data.token,
+          answer: '',
+          action,
+          datum,
+          updatedData
+        }
+      });
+    } catch (error: any) {
+      console.error(error);
+      this.showToast(error.message || 'Failed to initialize security verification.', 'error');
+    }
+  };
+
+  handleCaptchaCancel = () => {
+    this.setState({ captcha: null });
+  };
+
+  handleCaptchaSubmit = () => {
+    const { captcha } = this.state;
+    if (!captcha) return;
+    if (!captcha.answer.trim()) {
+      this.showToast('Please provide an answer', 'error');
+      return;
+    }
+    const { action, datum, updatedData, token, answer } = captcha;
+    this.setState({ captcha: null }, () => {
+      this.submitRequest(action, datum, updatedData, token, answer);
+    });
+  };
+
+  submitRequest = async (
+    action: 'edit' | 'add' | 'delete',
+    datum: any,
+    updatedData: any,
+    captchaToken: string,
+    captchaAnswer: string
+  ) => {
     this.showToast('Submitting request for approval...', 'loading');
     try {
       const response = await fetch('/api/submit-edit', {
@@ -43,7 +100,7 @@ export default class FamilyTree extends React.Component<{}, State> {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ action, datum, updatedData })
+        body: JSON.stringify({ action, datum, updatedData, captchaToken, captchaAnswer })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -111,7 +168,7 @@ export default class FamilyTree extends React.Component<{}, State> {
         const isExisting = familyData.some(d => d.id === datum.id);
         const action = isExisting ? 'edit' : 'add';
         
-        this.submitRequest(action, datum, updatedData);
+        this.triggerSubmitFlow(action, datum, updatedData);
       });
 
       f3EditTree.setOnDelete((datum: any, deletePerson: any, postSubmit: any) => {
@@ -120,7 +177,7 @@ export default class FamilyTree extends React.Component<{}, State> {
         const updatedData = f3EditTree.exportData();
         postSubmit();
 
-        this.submitRequest('delete', datum, updatedData);
+        this.triggerSubmitFlow('delete', datum, updatedData);
       });
 
       f3EditTree.setEdit();
@@ -220,6 +277,35 @@ export default class FamilyTree extends React.Component<{}, State> {
               </svg>
             )}
             <span>{toast.message}</span>
+          </div>
+        )}
+
+        {this.state.captcha && (
+          <div className="captcha-overlay">
+            <div className="captcha-modal">
+              <h3>Security Verification</h3>
+              <p>Please solve this math question to submit your changes:</p>
+              <div className="captcha-question">{this.state.captcha.question}</div>
+              <input 
+                type="text" 
+                className="captcha-input"
+                placeholder="Enter answer" 
+                value={this.state.captcha.answer}
+                onChange={(e) => this.setState({
+                  captcha: this.state.captcha ? { ...this.state.captcha, answer: e.target.value } : null
+                })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    this.handleCaptchaSubmit();
+                  }
+                }}
+                autoFocus
+              />
+              <div className="captcha-actions">
+                <button className="cancel-btn" onClick={this.handleCaptchaCancel}>Cancel</button>
+                <button className="submit-btn" onClick={this.handleCaptchaSubmit}>Verify</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
