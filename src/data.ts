@@ -750,8 +750,7 @@ export const familyData = [
         "18341b1b-cdc1-493c-8927-d2b3d8e360d5"
       ],
       "children": [
-        "496eaff1-6467-4f18-a148-16585d517c8a",
-        "6a1acd72-7ea4-4556-be69-90a35f3fd498"
+        "496eaff1-6467-4f18-a148-16585d517c8a"
       ],
       "spouses": [
         "c14f7496-4749-4e6b-9ce5-5a99ede2c765"
@@ -769,8 +768,7 @@ export const familyData = [
     },
     "rels": {
       "children": [
-        "496eaff1-6467-4f18-a148-16585d517c8a",
-        "6a1acd72-7ea4-4556-be69-90a35f3fd498"
+        "496eaff1-6467-4f18-a148-16585d517c8a"
       ],
       "spouses": [
         "3a4e68fe-04c3-4c5e-9d09-3a51387bb903"
