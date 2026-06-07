@@ -183,6 +183,11 @@
   }
 }
 
+.family-tree-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .family-tree-container {
   width: 100%;
   height: 900px;
@@ -190,4 +195,46 @@
   background-color: rgb(33, 33, 33);
   color: #fff;
 }
+
+.info-banner {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 30, 35, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 50px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  letter-spacing: 0.2px;
+}
+
+.info-icon {
+  width: 16px;
+  height: 16px;
+  color: #c084fc; /* Violet accent matching dark mode --accent */
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 
