@@ -140,7 +140,7 @@ export default class FamilyTree extends React.Component<{}, State> {
           f3Chart.updateMainId(d.data.id).updateTree({ tree_position: 'main_to_middle' });
         });
 
-      f3Chart.updateTree({ initial: true, tree_position: 'main_to_middle' });
+      f3Chart.updateTree({ initial: true }).updateTree({ tree_position: 'main_to_middle', scale: 0.6 });
     }
   }
 
