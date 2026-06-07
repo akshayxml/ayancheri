@@ -15,9 +15,15 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  // Verify CAPTCHA
-  if (!captchaToken || !captchaAnswer) {
-    return res.status(400).json({ error: 'CAPTCHA is required' });
+  // Input Validation
+  if (typeof action !== 'string' || !['add', 'edit', 'delete'].includes(action)) {
+    return res.status(400).json({ error: 'Invalid or missing action' });
+  }
+  if (!datum || typeof datum !== 'object') {
+    return res.status(400).json({ error: 'Invalid or missing datum' });
+  }
+  if (typeof captchaToken !== 'string' || typeof captchaAnswer !== 'string') {
+    return res.status(400).json({ error: 'Invalid or missing CAPTCHA parameters' });
   }
 
   const [timestampStr, hash] = captchaToken.split(':');
@@ -27,14 +33,19 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Invalid CAPTCHA token' });
   }
 
-  // Expiration check (10 minutes)
-  if (Date.now() - timestamp > 10 * 60 * 1000) {
+  // Expiration check (10 minutes) & Future timestamp check
+  const diff = Date.now() - timestamp;
+  if (diff > 10 * 60 * 1000 || diff < -30 * 1000) {
     return res.status(400).json({ error: 'CAPTCHA expired. Please refresh.' });
   }
 
+  // Re-calculate the payload request hash
+  const payloadString = JSON.stringify({ action, datum, updatedData });
+  const requestHash = crypto.createHash('sha256').update(payloadString).digest('hex');
+
   const expectedHash = crypto
     .createHmac('sha256', resendApiKey)
-    .update(`${captchaAnswer.trim()}:${timestamp}`)
+    .update(`${captchaAnswer.trim()}:${timestamp}:${requestHash}`)
     .digest('hex');
 
   if (expectedHash !== hash) {
