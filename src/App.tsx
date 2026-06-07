@@ -4,13 +4,6 @@ import 'family-chart/styles/family-chart.css';
 import "./App.css";
 import { familyData } from "./data";
 
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 interface State {
   editMode: boolean;
   toast: {
@@ -19,18 +12,17 @@ interface State {
     type: 'success' | 'error' | 'loading';
   } | null;
   captcha: {
-    question: string;
-    token: string;
-    answer: string;
     action: 'edit' | 'add' | 'delete';
     datum: any;
     updatedData: any;
+    token: string;
   } | null;
 }
 
 export default class FamilyTree extends React.Component<{}, State> {
   cont = React.createRef<HTMLDivElement>();
   toastTimeout: any = null;
+  recaptchaWidgetId: any = null;
 
   state: State = {
     editMode: false,
@@ -51,47 +43,32 @@ export default class FamilyTree extends React.Component<{}, State> {
     }
   };
 
-  triggerSubmitFlow = async (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
-    this.showToast('Generating security CAPTCHA...', 'loading');
-    try {
-      const payloadString = JSON.stringify({ action, datum, updatedData });
-      const requestHash = await sha256(payloadString);
-      const response = await fetch(`/api/get-captcha?hash=${requestHash}`);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate CAPTCHA');
+  triggerSubmitFlow = (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
+    this.setState({
+      captcha: {
+        action,
+        datum,
+        updatedData,
+        token: ''
       }
-      this.setState({
-        toast: null,
-        captcha: {
-          question: data.question,
-          token: data.token,
-          answer: '',
-          action,
-          datum,
-          updatedData
-        }
-      });
-    } catch (error: any) {
-      console.error(error);
-      this.showToast(error.message || 'Failed to initialize security verification.', 'error');
-    }
+    });
   };
 
   handleCaptchaCancel = () => {
     this.setState({ captcha: null });
+    this.recaptchaWidgetId = null;
   };
 
   handleCaptchaSubmit = () => {
     const { captcha } = this.state;
     if (!captcha) return;
-    if (!captcha.answer.trim()) {
-      this.showToast('Please provide an answer', 'error');
+    if (!captcha.token) {
+      this.showToast('Please complete the CAPTCHA first', 'error');
       return;
     }
-    const { action, datum, updatedData, token, answer } = captcha;
+    const { action, datum, updatedData, token } = captcha;
     this.setState({ captcha: null }, () => {
-      this.submitRequest(action, datum, updatedData, token, answer);
+      this.submitRequest(action, datum, updatedData, token);
     });
   };
 
@@ -99,8 +76,7 @@ export default class FamilyTree extends React.Component<{}, State> {
     action: 'edit' | 'add' | 'delete',
     datum: any,
     updatedData: any,
-    captchaToken: string,
-    captchaAnswer: string
+    captchaToken: string
   ) => {
     this.showToast('Submitting request for approval...', 'loading');
     try {
@@ -109,7 +85,7 @@ export default class FamilyTree extends React.Component<{}, State> {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ action, datum, updatedData, captchaToken, captchaAnswer })
+        body: JSON.stringify({ action, datum, updatedData, captchaToken })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -131,6 +107,31 @@ export default class FamilyTree extends React.Component<{}, State> {
     if (prevState.editMode !== this.state.editMode) {
       this.renderTree();
     }
+
+    if (!prevState.captcha && this.state.captcha) {
+      this.renderRecaptcha();
+    }
+  }
+
+  renderRecaptcha() {
+    setTimeout(() => {
+      const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+      if ((window as any).grecaptcha) {
+        this.recaptchaWidgetId = (window as any).grecaptcha.render('recaptcha-container', {
+          sitekey: siteKey,
+          callback: (token: string) => {
+            this.setState(prevState => ({
+              captcha: prevState.captcha ? { ...prevState.captcha, token } : null
+            }));
+          },
+          'expired-callback': () => {
+            this.setState(prevState => ({
+              captcha: prevState.captcha ? { ...prevState.captcha, token: '' } : null
+            }));
+          }
+        });
+      }
+    }, 100);
   }
 
   renderTree() {
@@ -293,26 +294,19 @@ export default class FamilyTree extends React.Component<{}, State> {
           <div className="captcha-overlay">
             <div className="captcha-modal">
               <h3>Security Verification</h3>
-              <p>Please solve this math question to submit your changes:</p>
-              <div className="captcha-question">{this.state.captcha.question}</div>
-              <input 
-                type="text" 
-                className="captcha-input"
-                placeholder="Enter answer" 
-                value={this.state.captcha.answer}
-                onChange={(e) => this.setState({
-                  captcha: this.state.captcha ? { ...this.state.captcha, answer: e.target.value } : null
-                })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    this.handleCaptchaSubmit();
-                  }
-                }}
-                autoFocus
-              />
+              <p>Please check the box below to verify you are human:</p>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+                <div id="recaptcha-container"></div>
+              </div>
               <div className="captcha-actions">
                 <button className="cancel-btn" onClick={this.handleCaptchaCancel}>Cancel</button>
-                <button className="submit-btn" onClick={this.handleCaptchaSubmit}>Verify</button>
+                <button 
+                  className="submit-btn" 
+                  onClick={this.handleCaptchaSubmit}
+                  disabled={!this.state.captcha.token}
+                >
+                  Verify
+                </button>
               </div>
             </div>
           </div>
