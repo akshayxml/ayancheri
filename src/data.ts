@@ -1,5 +1,26 @@
 export const familyData = [
   {
+    "id": "ad7b91c0-c217-4e7f-8751-55f4a887f06c",
+    "data": {
+      "gender": "M",
+      "first name": "Subrahmanian",
+      "last name": "Embrandiri",
+      "birthday": ""
+    },
+    "rels": {
+      "children": [
+        "f6b7d432-c48f-42cc-9f2e-f05bfd0bf3a0",
+        "7d9d55b1-6d33-4077-8ab9-3e3a6cd6243b",
+        "2138ba49-c035-4396-bd09-d79aab7dfbf9",
+        "9e6958b4-08e2-469e-b6ba-91aac3123889",
+        "d46c8398-7daf-4b81-84be-bd14dd016993"
+      ],
+      "spouses": [
+        "f31a84bb-ad39-461b-8e69-197c96a99dbb"
+      ]
+    }
+  },
+  {
     "id": "2035a81e-b00e-4f64-ba34-4a1e9758f333",
     "data": {
       "gender": "M",
@@ -594,27 +615,6 @@ export const familyData = [
       "parents": [
         "453ed3bd-323f-41f8-a35a-b8ca701cd6a6",
         "ad1e29f0-eecc-4577-8d02-6be6db170d4c"
-      ]
-    }
-  },
-  {
-    "id": "ad7b91c0-c217-4e7f-8751-55f4a887f06c",
-    "data": {
-      "gender": "M",
-      "first name": "Subrahmanian",
-      "last name": "Embrandiri",
-      "birthday": ""
-    },
-    "rels": {
-      "children": [
-        "f6b7d432-c48f-42cc-9f2e-f05bfd0bf3a0",
-        "7d9d55b1-6d33-4077-8ab9-3e3a6cd6243b",
-        "2138ba49-c035-4396-bd09-d79aab7dfbf9",
-        "9e6958b4-08e2-469e-b6ba-91aac3123889",
-        "d46c8398-7daf-4b81-84be-bd14dd016993"
-      ],
-      "spouses": [
-        "f31a84bb-ad39-461b-8e69-197c96a99dbb"
       ]
     }
   },
