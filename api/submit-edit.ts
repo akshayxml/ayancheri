@@ -14,7 +14,8 @@ export default async function handler(req: any, res: any) {
   }
 
   const actionText = action.toUpperCase();
-  const personName = datum?.data ? `${datum.data['first name'] || ''} ${datum.data['last name'] || ''}`.trim() : 'Unknown';
+  const rawPersonName = datum?.data ? `${datum.data['first name'] || ''} ${datum.data['last name'] || ''}`.trim() : 'Unknown';
+  const personName = escapeHtml(rawPersonName);
 
   // Format a nice HTML email
   const html = `
@@ -50,43 +51,43 @@ export default async function handler(req: any, res: any) {
             <div class="field-row">
               <span class="field-label">Action:</span>
               <span class="field-value">
-                <span class="badge badge-${action.toLowerCase()}">${actionText}</span>
+                <span class="badge badge-${escapeHtml(action.toLowerCase())}">${escapeHtml(actionText)}</span>
               </span>
             </div>
             
             <div class="field-row">
               <span class="field-label">Target Person:</span>
-              <span class="field-value"><strong>${personName}</strong> (ID: ${datum?.id || 'N/A'})</span>
+              <span class="field-value"><strong>${personName}</strong> (ID: ${escapeHtml(datum?.id || 'N/A')})</span>
             </div>
 
             <div class="detail-section">
               <h3>Proposed Details:</h3>
               <div class="field-row">
                 <span class="field-label">First Name:</span>
-                <span class="field-value">${datum?.data?.['first name'] || '<i>Empty</i>'}</span>
+                <span class="field-value">${renderField(datum?.data?.['first name'])}</span>
               </div>
               <div class="field-row">
                 <span class="field-label">Last Name:</span>
-                <span class="field-value">${datum?.data?.['last name'] || '<i>Empty</i>'}</span>
+                <span class="field-value">${renderField(datum?.data?.['last name'])}</span>
               </div>
               <div class="field-row">
                 <span class="field-label">Gender:</span>
-                <span class="field-value">${datum?.data?.gender || '<i>Empty</i>'}</span>
+                <span class="field-value">${renderField(datum?.data?.gender)}</span>
               </div>
               <div class="field-row">
                 <span class="field-label">Birthday:</span>
-                <span class="field-value">${datum?.data?.birthday || '<i>Empty</i>'}</span>
+                <span class="field-value">${renderField(datum?.data?.birthday)}</span>
               </div>
               <div class="field-row">
                 <span class="field-label">Avatar URL:</span>
-                <span class="field-value">${datum?.data?.avatar || '<i>Empty</i>'}</span>
+                <span class="field-value">${renderField(datum?.data?.avatar)}</span>
               </div>
             </div>
 
             ${updatedData ? `
               <h3>Updated Full Data JSON Snippet:</h3>
               <p>You can copy the content below and replace it in <code>src/data.ts</code>:</p>
-              <div class="data-block">export const familyData = ${JSON.stringify(updatedData, null, 2)};</div>
+              <div class="data-block">export const familyData = ${escapeHtml(JSON.stringify(updatedData, null, 2))};</div>
             ` : ''}
           </div>
           <div class="footer">
@@ -108,7 +109,7 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         from: `Family Tree <${fromEmail}>`,
         to: [toEmail],
-        subject: `[Pending Approval] Family Tree: ${actionText} - ${personName}`,
+        subject: `[Pending Approval] Family Tree: ${actionText} - ${rawPersonName}`,
         html: html
       })
     });
@@ -125,4 +126,22 @@ export default async function handler(req: any, res: any) {
     console.error('Fetch exception when contacting Resend:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
+}
+
+function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, (match) => {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return match;
+    }
+  });
+}
+
+function renderField(val: any): string {
+  return val ? escapeHtml(val) : '<i>Empty</i>';
 }
