@@ -800,19 +800,6 @@ export const familyData = [
     }
   },
   {
-    "id": "6a1acd72-7ea4-4556-be69-90a35f3fd498",
-    "data": {
-      "gender": "F"
-    },
-    "rels": {
-      "parents": [
-        "3a4e68fe-04c3-4c5e-9d09-3a51387bb903",
-        "c14f7496-4749-4e6b-9ce5-5a99ede2c765"
-      ]
-    },
-    "unknown": true
-  },
-  {
     "id": "5d6def1e-2914-4011-a3dd-6e2043c55373",
     "data": {
       "gender": "F",
