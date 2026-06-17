@@ -19,6 +19,7 @@ interface State {
   } | null;
   searchTerm: string;
   showSearchResults: boolean;
+  showDisclaimer: boolean;
 }
 
 export default class FamilyTree extends React.Component<{}, State> {
@@ -31,7 +32,8 @@ export default class FamilyTree extends React.Component<{}, State> {
     toast: null,
     captcha: null,
     searchTerm: '',
-    showSearchResults: false
+    showSearchResults: false,
+    showDisclaimer: true
   };
 
   showToast = (message: string, type: 'success' | 'error' | 'loading' = 'success', duration = 5000) => {
@@ -94,6 +96,10 @@ export default class FamilyTree extends React.Component<{}, State> {
     this.setState({ captcha: null }, () => {
       this.submitRequest(action, datum, updatedData, token);
     });
+  };
+
+  closeDisclaimer = () => {
+    this.setState({ showDisclaimer: false });
   };
 
   submitRequest = async (
@@ -428,6 +434,27 @@ export default class FamilyTree extends React.Component<{}, State> {
                   Verify
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {this.state.showDisclaimer && (
+          <div className="captcha-overlay">
+            <div className="captcha-modal" style={{ textAlign: "center", maxWidth: "400px" }}>
+              <h3 style={{ marginBottom: "15px", color: "#aa3bff" }}>Notice</h3>
+              <p style={{ lineHeight: "1.6", marginBottom: "20px", fontSize: "15px", color: "#e0e0e0" }}>
+                This family tree is incomplete.<br />
+                Please help complete it if you or someone you know is missing.<br /><br />
+                ഈ ഫാമിലി ട്രീ അപൂർണ്ണമാണ്.<br />
+                നിങ്ങളോ നിങ്ങൾക്ക് അറിയാവുന്നവരോ വിട്ടുപോയിട്ടുണ്ടെങ്കിൽ ദയവായി ഇത് പൂർത്തിയാക്കാൻ സഹായിക്കുക.
+              </p>
+              <button
+                className="submit-btn"
+                style={{ width: "100%", padding: "12px", marginTop: "10px" }}
+                onClick={this.closeDisclaimer}
+              >
+                OK
+              </button>
             </div>
           </div>
         )}
