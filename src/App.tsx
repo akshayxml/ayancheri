@@ -251,7 +251,7 @@ export default class FamilyTree extends React.Component<{}, State> {
     const { editMode, toast, searchTerm, showSearchResults } = this.state;
     const searchResults = this.getSearchResults();
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", backgroundColor: "rgb(33,33,33)", position: "relative" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "absolute", top: 0, bottom: 0, left: 0, right: 0, backgroundColor: "rgb(33,33,33)", overflow: "hidden" }}>
         <style>{`
           .toggle-mode-btn {
             font-family: system-ui, -apple-system, sans-serif;
@@ -350,6 +350,13 @@ export default class FamilyTree extends React.Component<{}, State> {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.5);
           }
+          @media (max-width: 768px) {
+            .search-container {
+              width: calc(100% - 40px);
+              top: 20px;
+              right: 20px;
+            }
+          }
         `}</style>
 
         <div className="search-container">
@@ -389,37 +396,35 @@ export default class FamilyTree extends React.Component<{}, State> {
             <span>Click on any person to see their tree</span>
           </div>
         )}
-        <div className="f3" id="FamilyChart" ref={this.cont} style={{ width: "100%", height: "900px", margin: "auto", backgroundColor: "rgb(33,33,33)", color: "#fff" }}></div>
-        <div style={{ position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)", zIndex: 1000 }}>
+        <div className="f3" id="FamilyChart" ref={this.cont} style={{ width: "100%", height: "calc(100% - 80px)", backgroundColor: "rgb(33,33,33)", color: "#fff" }}></div>
+        <div style={{ width: "100%", height: "80px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative", backgroundColor: "rgba(20,20,25,0.8)", borderTop: "1px solid rgba(255,255,255,0.1)", zIndex: 1000 }}>
           <button 
             className={`toggle-mode-btn ${editMode ? 'edit-active' : ''}`}
             onClick={this.toggleEditMode}
           >
             {editMode ? "Switch to View Mode" : "Switch to Edit Mode"}
           </button>
-        </div>
 
-        <a
-          href="https://github.com/akshayxml/ayancheri"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 1000,
-            color: "white",
-            opacity: 0.6,
-            transition: "opacity 0.2s ease"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
-          title="View on GitHub"
-        >
-          <svg height="32" viewBox="0 0 16 16" version="1.1" width="32" fill="currentColor">
-            <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-          </svg>
-        </a>
+          <a
+            href="https://github.com/akshayxml/ayancheri"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              position: "absolute",
+              right: "24px",
+              color: "white",
+              opacity: 0.6,
+              transition: "opacity 0.2s ease"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+            title="View on GitHub"
+          >
+            <svg height="32" viewBox="0 0 16 16" version="1.1" width="32" fill="currentColor">
+              <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+          </a>
+        </div>
 
         {toast && (
           <div className={`notification-toast show ${toast.type}`}>
