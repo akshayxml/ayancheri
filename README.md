@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Ayancheri Family Tree
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive, responsive family tree application built with React, TypeScript, and Vite. This application visualizes family relationships and allows users to search, view, and safely suggest edits to the family data.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Interactive Visualization**: Zoom, pan, and click on nodes to fluidly navigate the family tree.
+- **Search Functionality**: Quickly find family members by their first or last name.
+- **Edit Mode**: Users can propose additions, edits, or deletions directly from the UI. Submissions are verified via Google reCAPTCHA to prevent spam.
+- **Responsive Design**: Fully optimized for both desktop and mobile viewing with a native app-like full-screen layout.
+- **Modern Aesthetic**: A sleek, dark-themed UI built for comfortable viewing.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [React](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Charting Engine**: [family-chart (f3)](https://www.npmjs.com/package/family-chart)
+- **Security**: Google reCAPTCHA v2
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js (v16 or higher)
+- npm or yarn
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/akshayxml/ayancheri.git
+   cd ayancheri
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure Environment Variables *(Optional)*:
+   Create a `.env` file in the root directory if you need to override the default reCAPTCHA site key:
+   ```env
+   VITE_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
+   ```
+
+### Development
+
+Run the local development server with hot-module replacement:
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To build the application for production:
+```bash
+npm run build
 ```
+
+## Data Structure
+
+Family data is managed in `src/data.ts`. The application expects an array of objects representing individuals, containing their IDs, relationships, names, birthdays, and avatar links.
+
+## Contributing
+
+- **Family Data**: Switch to "Edit Mode" in the application to securely submit changes or additions to the family tree directly.
+- **Code**: For codebase contributions, please fork the repository and submit a pull request.
