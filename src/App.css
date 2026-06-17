@@ -220,6 +220,14 @@
   letter-spacing: 0.2px;
 }
 
+@media (max-width: 768px) {
+  .info-banner {
+    top: 80px;
+    width: max-content;
+    max-width: 90%;
+  }
+}
+
 .info-icon {
   width: 16px;
   height: 16px;
