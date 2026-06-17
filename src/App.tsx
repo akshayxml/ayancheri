@@ -17,6 +17,8 @@ interface State {
     updatedData: any;
     token: string;
   } | null;
+  searchTerm: string;
+  showSearchResults: boolean;
 }
 
 export default class FamilyTree extends React.Component<{}, State> {
@@ -27,7 +29,9 @@ export default class FamilyTree extends React.Component<{}, State> {
   state: State = {
     editMode: false,
     toast: null,
-    captcha: null
+    captcha: null,
+    searchTerm: '',
+    showSearchResults: false
   };
 
   showToast = (message: string, type: 'success' | 'error' | 'loading' = 'success', duration = 5000) => {
@@ -57,6 +61,26 @@ export default class FamilyTree extends React.Component<{}, State> {
   handleCaptchaCancel = () => {
     this.setState({ captcha: null });
     this.recaptchaWidgetId = null;
+  };
+
+  handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ searchTerm: e.target.value, showSearchResults: true });
+  };
+
+  handleSearchSelect = (datum: any) => {
+    this.setState({ searchTerm: "", showSearchResults: false });
+    if ((window as any).f3Chart) {
+      (window as any).f3Chart.updateMainId(datum.id).updateTree({ tree_position: 'main_to_middle' });
+    }
+  };
+
+  getSearchResults = () => {
+    const term = this.state.searchTerm.toLowerCase().trim();
+    if (!term) return [];
+    return familyData.filter((d: any) => {
+      const name = `${d.data['first name'] || ''} ${d.data['last name'] || ''}`.toLowerCase();
+      return name.includes(term);
+    }).slice(0, 10);
   };
 
   handleCaptchaSubmit = () => {
@@ -218,7 +242,8 @@ export default class FamilyTree extends React.Component<{}, State> {
   };
 
   render() {
-    const { editMode, toast } = this.state;
+    const { editMode, toast, searchTerm, showSearchResults } = this.state;
+    const searchResults = this.getSearchResults();
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", backgroundColor: "rgb(33,33,33)", position: "relative" }}>
         <style>{`
@@ -254,7 +279,102 @@ export default class FamilyTree extends React.Component<{}, State> {
             background: linear-gradient(135deg, #ff6b6b 0%, #e53e3e 100%);
             box-shadow: 0 6px 20px rgba(255, 75, 75, 0.6);
           }
+          .search-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 300px;
+            font-family: system-ui, -apple-system, sans-serif;
+          }
+          .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(40, 40, 40, 0.9);
+            color: white;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+          }
+          .search-input:focus {
+            border-color: #aa3bff;
+            box-shadow: 0 4px 20px rgba(170, 59, 255, 0.3);
+          }
+          .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+          }
+          .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(40, 40, 40, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            max-height: 300px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+          }
+          .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: white;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          }
+          .search-result-item:last-child {
+            border-bottom: none;
+          }
+          .search-result-item:hover {
+            background: rgba(170, 59, 255, 0.2);
+          }
+          .search-result-name {
+            font-weight: 500;
+          }
+          .search-result-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+          }
         `}</style>
+
+        <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={this.handleSearchChange}
+            onFocus={() => this.setState({ showSearchResults: true })}
+          />
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="search-results">
+              {searchResults.map((d: any) => (
+                <div
+                  key={d.id}
+                  className="search-result-item"
+                  onClick={() => this.handleSearchSelect(d)}
+                >
+                  <div className="search-result-name">
+                    {d.data['first name']} {d.data['last name']}
+                  </div>
+                  {d.data.birthday && (
+                    <div className="search-result-date">{d.data.birthday}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {!editMode && (
           <div className="info-banner">
             <svg className="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
