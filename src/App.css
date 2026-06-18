@@ -454,3 +454,22 @@
   }
 }
 
+/* Mobile styles for the family-chart edit form */
+@media (max-width: 768px) {
+  .f3 .f3-form-cont.opened {
+    position: absolute !important;
+    top: auto !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 50% !important;
+    border-top: 1px solid rgba(170, 59, 255, 0.4);
+    box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.7) !important;
+    border-radius: 20px 20px 0 0;
+    background-color: rgba(30, 30, 35, 0.95) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
