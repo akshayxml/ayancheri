@@ -53,11 +53,14 @@ export default async function handler(req: any, res: any) {
 
   // Generate git diff style patch
   let patchHtml = '';
+  let updatedJsonStr = '';
+  if (updatedData) {
+    updatedJsonStr = JSON.stringify(updatedData, null, 2);
+  }
+  
   if (updatedData && originalData) {
     const originalJson = JSON.stringify(originalData, null, 2);
-    const updatedJson = JSON.stringify(updatedData, null, 2);
-    const patchString = Diff.createPatch('src/data.ts', originalJson, updatedJson, 'Original', 'Updated');
-    
+    const patchString = Diff.createPatch('src/data.ts', originalJson, updatedJsonStr, 'Original', 'Updated');
     // Colorize the diff for email
     patchHtml = escapeHtml(patchString)
       .split('\n')
@@ -142,6 +145,12 @@ export default async function handler(req: any, res: any) {
               <h3>Data Changes (Git Diff):</h3>
               <p>You can see the exact changes below:</p>
               <div class="data-block">${patchHtml}</div>
+            ` : ''}
+
+            ${updatedJsonStr ? `
+              <h3>Full Updated Data (JSON):</h3>
+              <p>Here is the complete state of the family tree after this request:</p>
+              <div class="data-block">${escapeHtml(updatedJsonStr)}</div>
             ` : ''}
           </div>
           <div class="footer">

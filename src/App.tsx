@@ -203,11 +203,11 @@ export default class FamilyTree extends React.Component<{}, State> {
       f3EditTree.setOnSubmit((e: any, datum: any, applyChanges: any, postSubmit: any) => {
         e.preventDefault();
         
-        const originalData = f3EditTree.exportData();
+        const originalData = JSON.parse(JSON.stringify(f3EditTree.exportData()));
         // Apply local changes so the user sees it in the browser
         applyChanges();
-        const updatedData = f3EditTree.exportData();
         postSubmit();
+        const updatedData = JSON.parse(JSON.stringify(f3EditTree.exportData()));
 
         const isExisting = familyData.some(d => d.id === datum.id);
         const action = isExisting ? 'edit' : 'add';
@@ -216,11 +216,11 @@ export default class FamilyTree extends React.Component<{}, State> {
       });
 
       f3EditTree.setOnDelete((datum: any, deletePerson: any, postSubmit: any) => {
-        const originalData = f3EditTree.exportData();
+        const originalData = JSON.parse(JSON.stringify(f3EditTree.exportData()));
         // Apply delete locally
         deletePerson();
-        const updatedData = f3EditTree.exportData();
         postSubmit();
+        const updatedData = JSON.parse(JSON.stringify(f3EditTree.exportData()));
 
         this.triggerSubmitFlow('delete', datum, updatedData, originalData);
       });
