@@ -227,7 +227,7 @@ export default class FamilyTree extends React.Component<{}, State> {
 
       f3EditTree.setEdit();
 
-      f3Chart.updateTree({ initial: true });
+      f3Chart.updateTree({ initial: true }).updateTree({ tree_position: 'main_to_middle', scale: 0.6 });
       f3EditTree.open(f3Chart.getMainDatum());
     } else {
       f3Chart.setSingleParentEmptyCard(false);
