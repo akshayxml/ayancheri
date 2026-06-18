@@ -297,6 +297,12 @@ export default class FamilyTree extends React.Component<{}, State> {
             z-index: 1000;
             width: 300px;
             font-family: system-ui, -apple-system, sans-serif;
+            transition: all 0.3s ease;
+          }
+          .search-container.edit-mode {
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
           }
           .search-input {
             width: 100%;
@@ -361,10 +367,15 @@ export default class FamilyTree extends React.Component<{}, State> {
               top: 20px;
               right: 20px;
             }
+            .search-container.edit-mode {
+              left: 20px;
+              right: 20px;
+              transform: none;
+            }
           }
         `}</style>
 
-        <div className="search-container">
+        <div className={`search-container ${editMode ? 'edit-mode' : ''}`}>
           <input
             type="text"
             className="search-input"
