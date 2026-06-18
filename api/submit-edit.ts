@@ -59,29 +59,7 @@ export default async function handler(req: any, res: any) {
   }
   
   if (updatedData && originalData) {
-    let originalDataToDiff = originalData;
-    if (action === 'add' && Array.isArray(originalData)) {
-      const targetId = datum?.data?.id || datum?.id;
-      // Remove the newly added person from originalData to show their full insertion in the diff
-      originalDataToDiff = originalData.filter((d: any) => d.id !== targetId);
-      originalDataToDiff = JSON.parse(JSON.stringify(originalDataToDiff));
-
-      // Remove references to the new person from their relatives
-      originalDataToDiff.forEach((d: any) => {
-        if (d.rels) {
-          if (d.rels.father === targetId) delete d.rels.father;
-          if (d.rels.mother === targetId) delete d.rels.mother;
-          if (Array.isArray(d.rels.children)) {
-            d.rels.children = d.rels.children.filter((id: string) => id !== targetId);
-          }
-          if (Array.isArray(d.rels.spouses)) {
-            d.rels.spouses = d.rels.spouses.filter((id: string) => id !== targetId);
-          }
-        }
-      });
-    }
-
-    const originalJson = JSON.stringify(originalDataToDiff, null, 2);
+    const originalJson = JSON.stringify(originalData, null, 2);
     const patchString = Diff.createPatch('src/data.ts', originalJson, updatedJsonStr, 'Original', 'Updated');
     // Colorize the diff for email
     patchHtml = escapeHtml(patchString)
