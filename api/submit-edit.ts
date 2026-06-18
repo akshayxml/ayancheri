@@ -1,9 +1,11 @@
+import * as Diff from 'diff';
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, datum, updatedData, captchaToken } = req.body;
+  const { action, datum, updatedData, originalData, captchaToken } = req.body;
 
   const resendApiKey = process.env.RESEND_API_KEY;
   const toEmail = process.env.TO_EMAIL;
@@ -48,6 +50,26 @@ export default async function handler(req: any, res: any) {
   const actionText = action.toUpperCase();
   const rawPersonName = datum?.data ? `${datum.data['first name'] || ''} ${datum.data['last name'] || ''}`.trim() : 'Unknown';
   const personName = escapeHtml(rawPersonName);
+
+  // Generate git diff style patch
+  let patchHtml = '';
+  if (updatedData && originalData) {
+    const originalJson = JSON.stringify(originalData, null, 2);
+    const updatedJson = JSON.stringify(updatedData, null, 2);
+    const patchString = Diff.createPatch('src/data.ts', originalJson, updatedJson, 'Original', 'Updated');
+    
+    // Colorize the diff for email
+    patchHtml = escapeHtml(patchString)
+      .split('\n')
+      .map(line => {
+        if (line.startsWith('+') && !line.startsWith('+++')) return `<span style="color: #a3be8c;">${line}</span>`;
+        if (line.startsWith('-') && !line.startsWith('---')) return `<span style="color: #bf616a;">${line}</span>`;
+        if (line.startsWith('@')) return `<span style="color: #88c0d0;">${line}</span>`;
+        if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('Index:') || line.startsWith('===')) return `<span style="color: #ebcb8b; font-weight: bold;">${line}</span>`;
+        return line;
+      })
+      .join('\n');
+  }
 
   // Format a nice HTML email
   const html = `
@@ -116,10 +138,10 @@ export default async function handler(req: any, res: any) {
               </div>
             </div>
 
-            ${updatedData ? `
-              <h3>Updated Full Data JSON Snippet:</h3>
-              <p>You can copy the content below and replace it in <code>src/data.ts</code>:</p>
-              <div class="data-block">export const familyData = ${escapeHtml(JSON.stringify(updatedData, null, 2))};</div>
+            ${patchHtml ? `
+              <h3>Data Changes (Git Diff):</h3>
+              <p>You can see the exact changes below:</p>
+              <div class="data-block">${patchHtml}</div>
             ` : ''}
           </div>
           <div class="footer">

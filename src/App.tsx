@@ -15,6 +15,7 @@ interface State {
     action: 'edit' | 'add' | 'delete';
     datum: any;
     updatedData: any;
+    originalData: any;
     token: string;
   } | null;
   searchTerm: string;
@@ -49,12 +50,13 @@ export default class FamilyTree extends React.Component<{}, State> {
     }
   };
 
-  triggerSubmitFlow = (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any) => {
+  triggerSubmitFlow = (action: 'edit' | 'add' | 'delete', datum: any, updatedData: any, originalData: any) => {
     this.setState({
       captcha: {
         action,
         datum,
         updatedData,
+        originalData,
         token: ''
       }
     });
@@ -92,9 +94,9 @@ export default class FamilyTree extends React.Component<{}, State> {
       this.showToast('Please complete the CAPTCHA first', 'error');
       return;
     }
-    const { action, datum, updatedData, token } = captcha;
+    const { action, datum, updatedData, originalData, token } = captcha;
     this.setState({ captcha: null }, () => {
-      this.submitRequest(action, datum, updatedData, token);
+      this.submitRequest(action, datum, updatedData, originalData, token);
     });
   };
 
@@ -106,6 +108,7 @@ export default class FamilyTree extends React.Component<{}, State> {
     action: 'edit' | 'add' | 'delete',
     datum: any,
     updatedData: any,
+    originalData: any,
     captchaToken: string
   ) => {
     this.showToast('Submitting request for approval...', 'loading');
@@ -115,7 +118,7 @@ export default class FamilyTree extends React.Component<{}, State> {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ action, datum, updatedData, captchaToken })
+        body: JSON.stringify({ action, datum, updatedData, originalData, captchaToken })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -200,6 +203,7 @@ export default class FamilyTree extends React.Component<{}, State> {
       f3EditTree.setOnSubmit((e: any, datum: any, applyChanges: any, postSubmit: any) => {
         e.preventDefault();
         
+        const originalData = f3EditTree.exportData();
         // Apply local changes so the user sees it in the browser
         applyChanges();
         const updatedData = f3EditTree.exportData();
@@ -208,16 +212,17 @@ export default class FamilyTree extends React.Component<{}, State> {
         const isExisting = familyData.some(d => d.id === datum.id);
         const action = isExisting ? 'edit' : 'add';
         
-        this.triggerSubmitFlow(action, datum, updatedData);
+        this.triggerSubmitFlow(action, datum, updatedData, originalData);
       });
 
       f3EditTree.setOnDelete((datum: any, deletePerson: any, postSubmit: any) => {
+        const originalData = f3EditTree.exportData();
         // Apply delete locally
         deletePerson();
         const updatedData = f3EditTree.exportData();
         postSubmit();
 
-        this.triggerSubmitFlow('delete', datum, updatedData);
+        this.triggerSubmitFlow('delete', datum, updatedData, originalData);
       });
 
       f3EditTree.setEdit();
